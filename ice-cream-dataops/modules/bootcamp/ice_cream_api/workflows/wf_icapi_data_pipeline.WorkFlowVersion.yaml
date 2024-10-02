@@ -1,0 +1,75 @@
+workflowExternalId: wf_icapi_data_pipeline
+version: '1'
+workflowDefinition:
+  tasks:
+  - externalId: icapi_assets_extractor
+    type: function
+    parameters:
+      function:
+        externalId: icapi_assets_extractor
+        concurrencyPolicy: waitForCurrent
+    retries: 3
+    timeout: 3600
+    onFailure: abortWorkflow
+
+  - externalId: icapi_timeseries_extractor
+    type: function
+    parameters:
+      function:
+        externalId: icapi_timeseries_extractor
+        concurrencyPolicy: waitForCurrent
+    dependsOn:
+      - externalId: icapi_assets_extractor
+    retries: 3
+    timeout: 3600
+    onFailure: abortWorkflow
+
+  - externalId: icapi_datapoints_extractor
+    type: function
+    parameters:
+      function:
+        externalId: icapi_datapoints_extractor
+        concurrencyPolicy: waitForCurrent
+    dependsOn:
+      - externalId: icapi_timeseries_extractor
+    retries: 3
+    timeout: 3600
+    onFailure: abortWorkflow
+
+  - externalId: icapi_ts_assets_contextualization
+    type: transformation
+    parameters:
+      transformation:
+        externalId: icapi_ts_assets_contextualization
+        concurrencyPolicy: waitForCurrent
+    dependsOn:
+      - externalId: icapi_timeseries_extractor
+    retries: 3
+    timeout: 3600
+    onFailure: abortWorkflow
+
+  - externalId: oee_timeseries
+    type: function
+    parameters:
+      function:
+        externalId: oee_timeseries
+        concurrencyPolicy: waitForCurrent
+    dependsOn:
+      - externalId: icapi_ts_assets_contextualization
+    retries: 3
+    timeout: 3600
+    onFailure: abortWorkflow
+
+# workflowExternalId: wf_icapi_data_pipeline
+# version: '1'
+# workflowDefinition:
+#   tasks:
+#   - externalId: icapi_assets_task
+#     type: function
+#     parameters:
+#       function:
+#         externalId: icapi_assets_extractor
+#         concurrencyPolicy: waitForCurrent
+#     retries: 3
+#     timeout: 3600
+#     onFailure: abortWorkflow
